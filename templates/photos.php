@@ -87,6 +87,18 @@
     .anscontrols {
         text-align: center;
     }
+
+    /* Mobile */
+    @media only screen and (max-width:600px) {
+        .ansthumb-cont {
+            flex-wrap: wrap;
+        }
+        .ansthumb-cont div {
+            flex-basis: 19.6%; /* (100% - 4 paddings * 0.5%) / 5 photos */
+            padding-right: 0.5%;
+        }
+        .ansthumb-cont div:nth-of-type(5n) { padding-right: 0; }
+    }
 </style>
 
 <script>
