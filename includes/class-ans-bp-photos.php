@@ -7,7 +7,7 @@ class ANS_BP_Photos {
 
     // Options
     const MAX_PHOTO_NUM = 10;
-    const MAX_PHOTO_WIDTH = 800;
+    const MAX_PHOTO_WIDTH = 1000;
     const MAX_PHOTO_HEIGHT = 800;
     const MAX_THUMB_WIDTH = 150;
     const MAX_THUMB_HEIGHT = 150;
