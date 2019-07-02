@@ -108,7 +108,9 @@
             var img = $(this).attr('src').replace('-ansthumb', '-ansfull');
 
             $('.ansfull').fadeOut(100, function () {
-                $(this).attr('src', img);
+                // Set full img src, if the thumb clicked the second time - hide the full img
+                var src = $(this).attr('src') !== img ? img : '';
+                $(this).attr('src', src);
             }).fadeIn(100);
         });
     });
