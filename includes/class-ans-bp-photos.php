@@ -219,7 +219,7 @@ class ANS_BP_Photos {
         $user_dir = $this->get_user_dir(bp_displayed_user_id());
         $avatar_dir = bp_upload_dir()['basedir'] . '/avatars/' . bp_displayed_user_id() . '/';
 
-        mkdir($avatar_dir, 0755, true);
+        wp_mkdir_p($avatar_dir);
         copy($user_dir . $ansfull, $avatar_dir . $ansfull);
 
         $crop = [
