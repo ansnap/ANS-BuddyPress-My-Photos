@@ -13,7 +13,6 @@ class ANS_Photo_Attachment extends BP_Attachment {
         parent::__construct([
             'action' => 'photos_upload',
             'file_input' => 'photos',
-            'original_max_filesize' => 5 * 1024 * 1024, // 5 MB
             'allowed_mime_types' => ['jpg', 'png'],
             'upload_error_strings' => [
                 9 => 'Превышено максимальное число фотографий',

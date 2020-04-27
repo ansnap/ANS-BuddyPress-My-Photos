@@ -1,7 +1,15 @@
 <?php /* @var $this ANS_BP_Photos */ ?>
 
 <?php if ($this->user_can_edit()) : ?>
-    <p>Можно добавить до <?= ANS_BP_Photos::MAX_PHOTO_NUM ?> изображений. На фотографиях должно быть видно лицо человека. После загрузки выберите фото для установки аватара.</p>
+    <p>
+        Можно добавить до <?= ANS_BP_Photos::MAX_PHOTO_NUM ?> изображений.
+        Максимальный размер файлов: <?= round(wp_max_upload_size() / 1024 / 1024, 2) ?>MB.
+        После загрузки выберите фото для установки аватара.
+
+        <?php if ($this->is_avatar_exists()) : ?>
+            <a class="ansavatar-delete" href="#">Удалить аватар</a>
+        <?php endif; ?>
+    </p>
 
     <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="action" value="photos_upload">
@@ -22,6 +30,10 @@
         <input type="hidden" name="y" value="" class="anscropy">
         <input type="hidden" name="w" value="" class="anscropw">
         <input type="hidden" name="h" value="" class="anscroph">
+    </form>
+
+    <form id="avatar_delete" method="post">
+        <input type="hidden" name="action" value="avatar_delete">
     </form>
 
     <?php bp_core_add_jquery_cropper(); ?>
@@ -86,6 +98,9 @@
     }
     .anscontrols {
         text-align: center;
+    }
+    .jcrop-holder {
+        margin: 0 auto;
     }
 
     /* Mobile */
@@ -187,6 +202,15 @@
         // Update avatar
         $('.ansavatar-upload').click(function () {
             $('#avatar_update').submit();
+
+            return false;
+        });
+
+        // Delete avatar
+        $('.ansavatar-delete').click(function () {
+            if (confirm('Вы уверены?')) {
+                $('#avatar_delete').submit();
+            }
 
             return false;
         });

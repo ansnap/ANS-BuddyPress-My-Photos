@@ -7,10 +7,10 @@ class ANS_BP_Photos {
 
     // Options
     const MAX_PHOTO_NUM = 10;
-    const MAX_PHOTO_WIDTH = 1000;
-    const MAX_PHOTO_HEIGHT = 800;
-    const MAX_THUMB_WIDTH = 150;
-    const MAX_THUMB_HEIGHT = 150;
+    const MAX_PHOTO_WIDTH = 1200;
+    const MAX_PHOTO_HEIGHT = 1000;
+    const MAX_THUMB_WIDTH = 140;
+    const MAX_THUMB_HEIGHT = 140;
 
     public function __construct() {
         // Remove the 'Avatar' link and add the 'Photos' link to: Profile tabs and Admin Bar
@@ -99,8 +99,12 @@ class ANS_BP_Photos {
         return trailingslashit(bp_displayed_user_domain() . 'profile/photos');
     }
 
-    public function get_user_dir($user_id) {
+    public function get_photo_dir($user_id) {
         return bp_upload_dir()['basedir'] . '/ans-my-photos/' . $user_id . '/';
+    }
+
+    public function get_avatar_dir($user_id) {
+        return bp_upload_dir()['basedir'] . '/avatars/' . $user_id . '/';
     }
 
     public function photos_upload() {
@@ -135,12 +139,16 @@ class ANS_BP_Photos {
                 }
 
                 // The file was successfully uploaded!!
-                // Make resized jpg copies
+                $img_data = $attachment->get_image_data($photo['file']);
+
+                // Make resized compressed jpg copies
+                // Resize only if the image is bigger than our dimensions, otherwise there will be a resizing error
                 // Full image
                 $ansfull = $attachment->edit_image('ansfull', [
                     'file' => $photo['file'],
-                    'max_w' => ANS_BP_Photos::MAX_PHOTO_WIDTH,
-                    'max_h' => ANS_BP_Photos::MAX_PHOTO_HEIGHT,
+                    'max_w' => $img_data['width'] > ANS_BP_Photos::MAX_PHOTO_WIDTH ? ANS_BP_Photos::MAX_PHOTO_WIDTH : 0,
+                    'max_h' => $img_data['height'] > ANS_BP_Photos::MAX_PHOTO_HEIGHT ? ANS_BP_Photos::MAX_PHOTO_HEIGHT : 0,
+                    'quality' => 70,
                     'save' => false,
                 ]);
 
@@ -153,8 +161,8 @@ class ANS_BP_Photos {
                 // Thumbnail
                 $ansthumb = $attachment->edit_image('ansthumb', [
                     'file' => $photo['file'],
-                    'max_w' => ANS_BP_Photos::MAX_THUMB_WIDTH,
-                    'max_h' => ANS_BP_Photos::MAX_THUMB_HEIGHT,
+                    'max_w' => $img_data['width'] > ANS_BP_Photos::MAX_THUMB_WIDTH ? ANS_BP_Photos::MAX_THUMB_WIDTH : 0,
+                    'max_h' => $img_data['height'] > ANS_BP_Photos::MAX_THUMB_HEIGHT ? ANS_BP_Photos::MAX_THUMB_HEIGHT : 0,
                     'quality' => 70,
                     'crop' => true,
                     'save' => false,
@@ -186,10 +194,10 @@ class ANS_BP_Photos {
     }
 
     public function delete_user_photos($user_id) {
-        $user_dir = $this->get_user_dir($user_id);
+        $photo_dir = $this->get_photo_dir($user_id);
 
-        array_map('unlink', glob("$user_dir*"));
-        rmdir($user_dir);
+        array_map('unlink', glob("$photo_dir*"));
+        array_map('rmdir', glob("$photo_dir")); // If the dir does not exist there will be no warning
     }
 
     public function photo_delete() {
@@ -199,10 +207,10 @@ class ANS_BP_Photos {
             return;
         }
 
-        $user_dir = $this->get_user_dir(bp_displayed_user_id());
+        $photo_dir = $this->get_photo_dir(bp_displayed_user_id());
 
-        unlink($user_dir . $ansfull);
-        unlink($user_dir . str_replace('-ansfull', '-ansthumb', $ansfull));
+        unlink($photo_dir . $ansfull);
+        unlink($photo_dir . str_replace('-ansfull', '-ansthumb', $ansfull));
 
         $this->record_profile_updated_activity();
         bp_core_redirect($this->get_profile_photos_url());
@@ -216,11 +224,11 @@ class ANS_BP_Photos {
         }
 
         // Copy -ansfull.jpg to /avatars/ to process, BP will delete it
-        $user_dir = $this->get_user_dir(bp_displayed_user_id());
-        $avatar_dir = bp_upload_dir()['basedir'] . '/avatars/' . bp_displayed_user_id() . '/';
+        $photo_dir = $this->get_photo_dir(bp_displayed_user_id());
+        $avatar_dir = $this->get_avatar_dir(bp_displayed_user_id());
 
         wp_mkdir_p($avatar_dir);
-        copy($user_dir . $ansfull, $avatar_dir . $ansfull);
+        copy($photo_dir . $ansfull, $avatar_dir . $ansfull);
 
         $crop = [
             'item_id' => bp_displayed_user_id(),
@@ -237,6 +245,17 @@ class ANS_BP_Photos {
             bp_core_add_message('Возникла проблема при обновлении аватара', 'error');
             bp_core_redirect($this->get_profile_photos_url());
         }
+
+        $this->record_profile_updated_activity();
+        bp_core_redirect($this->get_profile_photos_url());
+    }
+
+    public function is_avatar_exists() {
+        return is_dir($this->get_avatar_dir(bp_displayed_user_id()));
+    }
+
+    public function avatar_delete() {
+        bp_core_delete_existing_avatar();
 
         $this->record_profile_updated_activity();
         bp_core_redirect($this->get_profile_photos_url());
